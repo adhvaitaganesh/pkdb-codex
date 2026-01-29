@@ -70,3 +70,17 @@ class AccessRequestRecord(BaseModel):
     reason: str
     status: str = "pending"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class RoleUpgradeRequestCreate(BaseModel):
+    requested_role: Role
+    reason: str
+
+
+class RoleUpgradeRequestRecord(BaseModel):
+    id: str
+    requester_id: str
+    requested_role: Role
+    reason: str
+    status: str = "pending"
+    created_at: datetime = Field(default_factory=datetime.utcnow)

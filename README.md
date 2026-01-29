@@ -7,6 +7,7 @@ This repository contains a first-draft FastAPI backend for the pharmacological d
 - Role-aware dataset creation and editing
 - Lock/unlock dataset controls (admin only)
 - Access requests for locked datasets
+- Role upgrade requests for viewers
 
 ## Quickstart
 
