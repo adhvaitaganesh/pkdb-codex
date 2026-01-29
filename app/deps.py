@@ -4,13 +4,19 @@ from jose import JWTError, jwt
 
 from app.config import settings
 from app.models import UserRecord
-from app.storage import InMemoryStore, Storage
+from app.storage import InMemoryStore, MongoStore, Storage
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")
-_store = InMemoryStore()
+_store: Storage | None = None
 
 
 def get_store() -> Storage:
+    global _store
+    if _store is None:
+        if settings.use_mongo:
+            _store = MongoStore(settings.mongo_uri, settings.mongo_db)
+        else:
+            _store = InMemoryStore()
     return _store
 
 

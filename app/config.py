@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     access_token_minutes: int = 60
     mongo_uri: str = "mongodb://localhost:27017"
     mongo_db: str = "pkdb"
+    use_mongo: bool = False
 
 
 settings = Settings()

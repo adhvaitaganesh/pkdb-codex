@@ -19,6 +19,15 @@ uvicorn app.main:app --reload
 
 Open `http://127.0.0.1:8000/docs` for interactive API docs.
 
+## MongoDB configuration
+Set `PKDB_USE_MONGO=true` along with `PKDB_MONGO_URI` and `PKDB_MONGO_DB` to use MongoDB-backed storage.
+
+```bash
+export PKDB_USE_MONGO=true
+export PKDB_MONGO_URI="mongodb://localhost:27017"
+export PKDB_MONGO_DB="pkdb"
+```
+
 ## Example workflow
 1. Register a user:
    ```bash
@@ -35,5 +44,5 @@ Open `http://127.0.0.1:8000/docs` for interactive API docs.
 3. Use the token to create a dataset.
 
 ## Notes
-- The current storage layer uses an in-memory store for the first draft. Swap to MongoDB by implementing the `Storage` protocol in `app/storage.py`.
+- The current storage layer uses an in-memory store by default. Swap to MongoDB by implementing the `Storage` protocol in `app/storage.py` or enabling `PKDB_USE_MONGO`.
 - Change `PKDB_JWT_SECRET` in your environment before deploying.
