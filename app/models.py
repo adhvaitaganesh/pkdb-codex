@@ -84,3 +84,12 @@ class RoleUpgradeRequestRecord(BaseModel):
     reason: str
     status: str = "pending"
     created_at: datetime = Field(default_factory=datetime.utcnow)
+
+
+class AuditLogRecord(BaseModel):
+    id: str
+    dataset_id: str
+    actor_id: str
+    action: str
+    details: dict = Field(default_factory=dict)
+    created_at: datetime = Field(default_factory=datetime.utcnow)

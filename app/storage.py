@@ -7,6 +7,7 @@ from uuid import uuid4
 from app.models import (
     AccessRequestCreate,
     AccessRequestRecord,
+    AuditLogRecord,
     DatasetCreate,
     DatasetRecord,
     DatasetUpdate,
@@ -70,6 +71,14 @@ class Storage(Protocol):
     def update_user_role(self, user_id: str, role: str) -> UserRecord | None:
         ...
 
+    def create_audit_log(
+        self, dataset_id: str, actor_id: str, action: str, details: dict | None = None
+    ) -> AuditLogRecord:
+        ...
+
+    def list_audit_logs(self, dataset_id: str) -> list[AuditLogRecord]:
+        ...
+
 
 class InMemoryStore:
     def __init__(self) -> None:
@@ -77,6 +86,7 @@ class InMemoryStore:
         self._datasets: dict[str, DatasetRecord] = {}
         self._requests: dict[str, AccessRequestRecord] = {}
         self._role_requests: dict[str, RoleUpgradeRequestRecord] = {}
+        self._audit_logs: dict[str, AuditLogRecord] = {}
 
     def create_user(self, user: UserCreate) -> UserRecord:
         user_id = str(uuid4())
@@ -185,6 +195,23 @@ class InMemoryStore:
         self._users[user_id] = updated
         return updated
 
+    def create_audit_log(
+        self, dataset_id: str, actor_id: str, action: str, details: dict | None = None
+    ) -> AuditLogRecord:
+        log_id = str(uuid4())
+        record = AuditLogRecord(
+            id=log_id,
+            dataset_id=dataset_id,
+            actor_id=actor_id,
+            action=action,
+            details=details or {},
+        )
+        self._audit_logs[log_id] = record
+        return record
+
+    def list_audit_logs(self, dataset_id: str) -> list[AuditLogRecord]:
+        return [log for log in self._audit_logs.values() if log.dataset_id == dataset_id]
+
 
 class MongoStore:
     def __init__(self, uri: str, database: str) -> None:
@@ -196,10 +223,12 @@ class MongoStore:
         self._datasets = self._db["datasets"]
         self._requests = self._db["access_requests"]
         self._role_requests = self._db["role_upgrade_requests"]
+        self._audit_logs = self._db["dataset_audit_logs"]
         self._users.create_index("email", unique=True)
         self._datasets.create_index("owner_id")
         self._requests.create_index("dataset_id")
         self._role_requests.create_index("requester_id")
+        self._audit_logs.create_index("dataset_id")
 
     def create_user(self, user: UserCreate) -> UserRecord:
         user_id = str(uuid4())
@@ -300,3 +329,20 @@ class MongoStore:
         self._users.update_one({"id": user_id}, {"$set": {"role": role}})
         doc = self._users.find_one({"id": user_id})
         return UserRecord(**doc) if doc else None
+
+    def create_audit_log(
+        self, dataset_id: str, actor_id: str, action: str, details: dict | None = None
+    ) -> AuditLogRecord:
+        log_id = str(uuid4())
+        record = AuditLogRecord(
+            id=log_id,
+            dataset_id=dataset_id,
+            actor_id=actor_id,
+            action=action,
+            details=details or {},
+        )
+        self._audit_logs.insert_one(record.model_dump())
+        return record
+
+    def list_audit_logs(self, dataset_id: str) -> list[AuditLogRecord]:
+        return [AuditLogRecord(**doc) for doc in self._audit_logs.find({"dataset_id": dataset_id})]
